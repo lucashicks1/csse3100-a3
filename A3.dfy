@@ -16,7 +16,8 @@ class Stack<T(0)> {
         ensures Valid() ==> this in Repr && |Elements| <= max
     {
         // Preventing aliasing
-        this in Repr && stack in Repr &&
+        this in Repr &&
+        stack in Repr &&
         // Abstraction relation
         |Elements| <= max &&
         |Elements| == size &&
@@ -50,6 +51,7 @@ class Stack<T(0)> {
         modifies Repr
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == [v] + old(Elements)
+        ensures |Elements| == old(|Elements|) + 1
     {
         stack[size] := v;
         size := size + 1;
@@ -61,6 +63,7 @@ class Stack<T(0)> {
         modifies Repr
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[1..])
+        ensures |Elements| == old(|Elements|) - 1
         ensures v == old(Elements[0])
     {
         size := size - 1;
@@ -136,32 +139,35 @@ class Queue<T(0)> {
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[..|Elements|-1])
         ensures v == old(Elements[|Elements|- 1])
-    // {
-    //     if stack2.IsEmpty() {
-    //         var temp: T;
-    //         assert stack1.Repr !! stack2.Repr;
-    //         while !stack1.IsEmpty()
-    //             decreases |stack1.Elements|
-    //             invariant stack1.Valid() && stack2.Valid() // This fixes the !stack1.IsEmpty() not meeting preconditions in loop gaurd
-    //             // Why does this happen?? Queue.Valid() includes stack1.Valid() and stack2.Valid() and the IsEmpty() requires and ensures Valid() for stack
+    {
+        assert Elements == stack1.Elements + reverse_sequence(stack2.Elements);
+        assert !stack1.IsEmpty() || !stack2.IsEmpty();
+        assert Valid();
+        assert stack1.Valid();
+        assert stack2.Valid();
+        if stack2.IsEmpty() {
+            var temp: T;
+            while !stack1.IsEmpty()
+                decreases |stack1.Elements|
+                invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements)
+                invariant |stack1.Elements| + |stack2.Elements| == old(|stack1.Elements|) + old(|stack2.Elements|)
+                invariant stack1.Repr == old(stack1.Repr)
+                invariant stack2.Repr == old(stack1.Repr)
+                invariant stack1.Repr !! stack2.Repr
+                invariant stack1 in stack1.Repr
+                invariant stack2 in stack2.Repr
+            {
+                temp := stack1.Pop();
+                stack2.Push(temp);
 
-    //             invariant Elements == old(Elements) // Adding this resolves modifies clause error with v := stack2.Pop();
-    //             invariant |Elements| == |stack1.Elements| + |stack2.Elements| // Adding this resolves modifies clause error with v := stack2.Pop();
-    //             invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements) // Adding this resolves modifies clause error with v := stack2.Pop();
-    //             // invariant stack1.Valid() && stack2.Valid() // Having these in there might violate modifies clause with v := stack2.Pop()???
-    //         {
-    //             // assert stack1.Repr !! stack2.Repr; // This is not holding for some reason
-    //             temp := stack1.Pop(); // With code currently, these are not holding - violate context's modifies clause
-    //             Repr := Repr + stack1.Repr;
-    //             stack2.Push(temp); // With code currently, these are not holding - violate context's modifies clause
-    //             Repr := Repr + stack2.Repr;
-    //         }
-    //     }
-    //     v := stack2.Pop();
+            }
+            assert stack2.Valid();
+        }
+        v := stack2.Pop();
 
-    //     Elements := Elements[..|Elements| - 1];
-    //     Repr := Repr + stack2.Repr + stack1.Repr;
-    // }
+        Elements := Elements[..|Elements| - 1];
+        Repr := Repr + stack2.Repr + stack1.Repr;
+    }
 }
 
 // method Main() {
@@ -186,15 +192,27 @@ class Queue<T(0)> {
 // }
 
 method Main() {
-    var check: seq<int>;
+    var s1 := new Stack<int>(5);
+    s1.Push(1);
+    s1.Push(2);
+    s1.Push(3);
 
-    check := [1,2];
 
-    assert check == [1,2];
+    var check: seq<int> := [1,2,3];
+    var check2: seq<int> := [3,2,1];
 
-    assert check == [1,2];
-    var check1 := reverse_sequence(check);
-    assert check1 == [2,1];
+    assert s1.Elements == reverse_sequence(check);
+    assert s1.Elements == check2;
+
+    var len := 3;
+    // while len != 0
+    // invariant s1.Repr == old(s1.Repr)
+    // {
+    //     var b := s1.Pop();
+    //     print("5");
+    //     len := len - 1;
+    // }
+
 
     var a := new Stack<int>(5);
     assert a.IsEmpty() == true;
