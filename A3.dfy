@@ -59,7 +59,8 @@ class Stack<T(0)> {
     }
 
     method Pop() returns (v: T)
-        requires Valid() && !IsEmpty()
+        requires Valid()
+        requires !IsEmpty()
         modifies Repr
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[1..])
@@ -135,32 +136,35 @@ class Queue<T(0)> {
     
     method Remove() returns (v:T)
         requires Valid() && |Elements| > 0
-        requires |stack1.Elements| > 0
-        requires |stack2.Elements| > 0
         modifies Repr
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[..|Elements|-1])
         ensures v == old(Elements[|Elements|- 1])
     {
+        assert Elements == old(Elements);
         if stack2.IsEmpty() {
             var temp: T;
+            ghost var test: T;
             while !stack1.IsEmpty()
                 decreases |stack1.Elements|
-                invariant Elements == old(Elements)
+                invariant |Elements| == old(|Elements|)
+                invariant |stack2.Elements| <= |Elements|
+                invariant Elements == old(Elements)[|stack2.Elements|..] + old(Elements)[..|stack2.Elements|]
                 invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements)
                 invariant Valid()
                 invariant fresh(Repr - old(Repr))
+                invariant stack1.IsEmpty() ==> Elements == reverse_sequence(stack2.Elements) && !stack2.IsEmpty()
             {
                 temp := stack1.Pop();
-                Elements := Elements[1..];
                 stack2.Push(temp);
-                Elements := Elements[..|stack1.Elements|] + Elements[|stack1.Elements|..|stack1.Elements| + |stack2.Elements|] + [temp];
+                Elements := Elements[1..] + [Elements[0]];
                 Repr := Repr + stack1.Repr + stack2.Repr;
             }
         }
-        v := stack2.Pop();
-
-        Elements := Elements[..|Elements| - 1];
-        Repr := Repr + stack2.Repr + stack1.Repr;
+            assert Elements == old(Elements);
+            assert Elements == stack1.Elements + reverse_sequence(stack2.Elements);
+            v := stack2.Pop();
+            assert v == old(Elements[|Elements|- 1]);
+            Repr := Repr + stack2.Repr + stack1.Repr;
     }
 }
