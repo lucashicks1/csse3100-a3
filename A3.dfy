@@ -140,6 +140,7 @@ class Queue<T(0)> {
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[..|Elements|-1])
         ensures v == old(Elements[|Elements|- 1])
+        ensures |Elements| == old(|Elements|) - 1
     {
         if stack2.IsEmpty() {
             var temp: T;
@@ -152,7 +153,7 @@ class Queue<T(0)> {
                 invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements)
                 invariant Valid()
                 invariant fresh(Repr - old(Repr))
-                invariant stack1.IsEmpty() ==> Elements == old(Elements)
+                invariant stack1.IsEmpty() ==> Elements == reverse_sequence(stack2.Elements) && Elements == old(Elements)
             {
                 temp := stack1.Pop();
                 stack2.Push(temp);
