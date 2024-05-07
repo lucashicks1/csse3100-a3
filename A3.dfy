@@ -148,10 +148,6 @@ class Queue<T(0)> {
                 invariant Elements == old(Elements)
                 invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements)
                 invariant Valid()
-                invariant stack1.Repr <= Repr
-                invariant stack2.Repr <= Repr
-                invariant fresh(stack1.Repr - old(stack1.Repr))
-                invariant fresh(stack2.Repr - old(stack2.Repr))
                 invariant fresh(Repr - old(Repr))
             {
                 temp := stack1.Pop();
@@ -165,27 +161,6 @@ class Queue<T(0)> {
         Repr := Repr + stack2.Repr + stack1.Repr;
     }
 }
-
-// method Main() {
-//     var check := new Queue<int>(5);
-
-//     assert |check.Elements| == 0;
-
-//     check.Add(5);
-//     check.Add(10);
-//     check.Add(10);
-//     check.Add(10);
-//     check.Add(10);
-
-//     var r1 := check.Remove();
-//     assert r1 == 5;
-
-//     check.Add(10);
-
-//     var r2 := check.Remove();
-//     assert r2 == 10;
-
-// }
 
 method Main() {
     var t: nat;
