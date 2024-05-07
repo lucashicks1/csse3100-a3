@@ -135,6 +135,7 @@ class Queue<T(0)> {
     
     method Remove() returns (v:T)
         requires Valid() && |Elements| > 0
+        requires |stack1.Elements| + |stack2.Elements| > 0
         modifies Repr
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[..|Elements|-1])
@@ -151,6 +152,7 @@ class Queue<T(0)> {
                 invariant stack2.Repr <= Repr
                 invariant fresh(stack1.Repr - old(stack1.Repr))
                 invariant fresh(stack2.Repr - old(stack2.Repr))
+                invariant fresh(Repr - old(Repr))
             {
                 temp := stack1.Pop();
                 stack2.Push(temp);
