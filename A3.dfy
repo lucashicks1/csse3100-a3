@@ -144,7 +144,6 @@ class Queue<T(0)> {
     {
         if stack2.IsEmpty() {
             var temp: T;
-            ghost var test: T;
             while !stack1.IsEmpty()
                 decreases |stack1.Elements|
                 invariant |Elements| == old(|Elements|)
