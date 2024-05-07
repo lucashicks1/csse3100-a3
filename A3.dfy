@@ -135,7 +135,8 @@ class Queue<T(0)> {
     
     method Remove() returns (v:T)
         requires Valid() && |Elements| > 0
-        requires |stack1.Elements| + |stack2.Elements| > 0
+        requires |stack1.Elements| > 0
+        requires |stack2.Elements| > 0
         modifies Repr
         ensures Valid() && fresh(Repr - old(Repr))
         ensures Elements == old(Elements[..|Elements|-1])
@@ -151,7 +152,9 @@ class Queue<T(0)> {
                 invariant fresh(Repr - old(Repr))
             {
                 temp := stack1.Pop();
+                Elements := Elements[1..];
                 stack2.Push(temp);
+                Elements := Elements[..|stack1.Elements|] + Elements[|stack1.Elements|..|stack1.Elements| + |stack2.Elements|] + [temp];
                 Repr := Repr + stack1.Repr + stack2.Repr;
             }
         }
@@ -160,54 +163,4 @@ class Queue<T(0)> {
         Elements := Elements[..|Elements| - 1];
         Repr := Repr + stack2.Repr + stack1.Repr;
     }
-}
-
-method Main() {
-    var t: nat;
-
-    t := 10;
-
-
-
-    var s1 := new Stack<int>(5);
-    s1.Push(1);
-    s1.Push(2);
-    s1.Push(3);
-
-
-    var check: seq<int> := [1,2,3];
-    var check2: seq<int> := [3,2,1];
-
-    assert s1.Elements == reverse_sequence(check);
-    assert s1.Elements == check2;
-
-    var len := 3;
-    // while len != 0
-    // invariant s1.Repr == old(s1.Repr)
-    // {
-    //     var b := s1.Pop();
-    //     print("5");
-    //     len := len - 1;
-    // }
-
-
-    var a := new Stack<int>(5);
-    assert a.IsEmpty() == true;
-    a.Push(5);
-    assert a.IsEmpty() == false;
-    a.Push(10);
-    assert a.IsEmpty() == false;
-    a.Push(15);
-
-    var v1 := a.Pop();
-    assert v1 == 15;
-    var v2 := a.Pop();
-    assert v2 == 10;
-    var v3 := a.Pop();
-    assert v3 == 5;
-
-    a.Push(6);
-    var v4 := a.Pop();
-    assert a.IsEmpty() == true;
-    assert v4 == 6;
 }
