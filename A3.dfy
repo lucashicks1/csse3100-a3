@@ -140,28 +140,22 @@ class Queue<T(0)> {
         ensures Elements == old(Elements[..|Elements|-1])
         ensures v == old(Elements[|Elements|- 1])
     {
-        assert Elements == stack1.Elements + reverse_sequence(stack2.Elements);
-        assert !stack1.IsEmpty() || !stack2.IsEmpty();
-        assert Valid();
-        assert stack1.Valid();
-        assert stack2.Valid();
         if stack2.IsEmpty() {
             var temp: T;
             while !stack1.IsEmpty()
                 decreases |stack1.Elements|
+                invariant Elements == old(Elements)
                 invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements)
-                invariant |stack1.Elements| + |stack2.Elements| == old(|stack1.Elements|) + old(|stack2.Elements|)
-                invariant stack1.Repr == old(stack1.Repr)
-                invariant stack2.Repr == old(stack1.Repr)
-                invariant stack1.Repr !! stack2.Repr
-                invariant stack1 in stack1.Repr
-                invariant stack2 in stack2.Repr
+                invariant Valid()
+                invariant stack1.Repr <= Repr
+                invariant stack2.Repr <= Repr
+                invariant fresh(stack1.Repr - old(stack1.Repr))
+                invariant fresh(stack2.Repr - old(stack2.Repr))
             {
                 temp := stack1.Pop();
                 stack2.Push(temp);
-
+                Repr := Repr + stack1.Repr + stack2.Repr;
             }
-            assert stack2.Valid();
         }
         v := stack2.Pop();
 
@@ -192,6 +186,12 @@ class Queue<T(0)> {
 // }
 
 method Main() {
+    var t: nat;
+
+    t := 10;
+
+
+
     var s1 := new Stack<int>(5);
     s1.Push(1);
     s1.Push(2);
