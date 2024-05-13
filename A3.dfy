@@ -1,7 +1,3 @@
-ghost function reverse_sequence<T>(s: seq<T>): seq<T> {
-    if |s| == 0 then [] else reverse_sequence(s[1..]) + [s[0]]
-}
-
 class Stack<T(0)> {
 
     ghost var Elements: seq<T>
@@ -10,6 +6,10 @@ class Stack<T(0)> {
 
     var size: nat
     var stack: array<T>
+
+    ghost function Reverse_sequence<T>(s: seq<T>): seq<T> {
+        if |s| == 0 then [] else Reverse_sequence(s[1..]) + [s[0]]
+    }
 
     ghost predicate Valid()
         reads this, Repr
@@ -22,7 +22,7 @@ class Stack<T(0)> {
         |Elements| <= max &&
         |Elements| == size &&
         max == stack.Length &&
-        reverse_sequence(Elements) == stack[..size]
+        Reverse_sequence(Elements) == stack[..size]
     }
 
     constructor (max: nat)
@@ -84,6 +84,10 @@ class Queue<T(0)> {
     var stack1: Stack<T>
     var stack2: Stack<T>
 
+    ghost function Reverse_sequence<T>(s: seq<T>): seq<T> {
+        if |s| == 0 then [] else Reverse_sequence(s[1..]) + [s[0]]
+    }
+
     ghost predicate Valid()
         reads this, Repr
         ensures Valid() ==> this in Repr && |Elements| <= max
@@ -93,18 +97,19 @@ class Queue<T(0)> {
         (
             stack1 in Repr &&
             stack1.Repr <= Repr &&
-            this !in stack1.Repr
+            this !in stack1.Repr &&
+            stack1.Valid()
         ) &&
         (
             stack2 in Repr &&
             stack2.Repr <= Repr &&
-            this !in stack2.Repr
+            this !in stack2.Repr &&
+            stack2.Valid()
         ) &&
-        stack1.Valid() && stack2.Valid() &&
         stack1.Repr !! stack2.Repr &&
         // Abstract relation
         |Elements| <= max &&
-        Elements == stack1.Elements + reverse_sequence(stack2.Elements) &&
+        Elements == stack1.Elements + Reverse_sequence(stack2.Elements) &&
         |Elements| == |stack1.Elements| + |stack2.Elements| &&
         max == stack1.max &&
         max == stack2.max
@@ -149,10 +154,10 @@ class Queue<T(0)> {
                 invariant |Elements| == old(|Elements|)
                 invariant |stack2.Elements| <= |Elements|
                 invariant Elements == old(Elements)[|stack2.Elements|..] + old(Elements)[..|stack2.Elements|]
-                invariant Elements == stack1.Elements + reverse_sequence(stack2.Elements)
+                invariant Elements == stack1.Elements + Reverse_sequence(stack2.Elements)
                 invariant Valid()
                 invariant fresh(Repr - old(Repr))
-                invariant stack1.IsEmpty() ==> Elements == reverse_sequence(stack2.Elements) && Elements == old(Elements)
+                invariant stack1.IsEmpty() ==> Elements == Reverse_sequence(stack2.Elements) && Elements == old(Elements)
             {
                 temp := stack1.Pop();
                 stack2.Push(temp);
@@ -164,4 +169,17 @@ class Queue<T(0)> {
             Elements := Elements[..|Elements| - 1];
             Repr := Repr + stack2.Repr + stack1.Repr;
     }
+}
+
+method Main() {
+    var q := new Queue<int>(3);
+
+    q.Add(0);
+    assert |q.Elements| == 1;
+    q.Add(1);
+    q.Add(2);
+    assert q.Elements == [2,1,0];
+    var a := q.Remove();
+    assert q.Elements == [2,1];
+    assert a == 0;
 }
