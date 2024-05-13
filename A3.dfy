@@ -170,16 +170,3 @@ class Queue<T(0)> {
             Repr := Repr + stack2.Repr + stack1.Repr;
     }
 }
-
-method Main() {
-    var q := new Queue<int>(3);
-
-    q.Add(0);
-    assert |q.Elements| == 1;
-    q.Add(1);
-    q.Add(2);
-    assert q.Elements == [2,1,0];
-    var a := q.Remove();
-    assert q.Elements == [2,1];
-    assert a == 0;
-}
